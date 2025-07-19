@@ -1,0 +1,10 @@
+time_static (Resource)
+Manages a static time resource, which keeps a locally sourced UTC timestamp stored in the Terraform state. This prevents perpetual differences caused by using the timestamp() function.
+
+
+resource "time_static" "example" {}
+
+output "current_time" {
+  value = time_static.example.rfc3339
+}
+
