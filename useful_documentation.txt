@@ -3,23 +3,18 @@ Manages a static time resource, which keeps a
 locally sourced UTC timestamp stored in the Terraform state.
 This prevents perpetual differences caused by using the timestamp() function.
 
----------------------------------------
 resource "time_static" "example" {}
 
 output "current_time" {
   value = time_static.example.rfc3339
 }
 ----------------------------------------
-
-
-
 tls_private_key (Resource)
 If the managed resource supports a write-only attribute
 for the private key (first introduced in Terraform 1.11),
 then the ephemeral variant of tls_private_key should be used, when possible,
 to avoid storing the private key data in the plan or state file.
 
---------------------------------------------------
 # ECDSA key with P384 elliptic curve
 resource "tls_private_key" "ecdsa-p384-example" {
   algorithm   = "ECDSA"
@@ -38,3 +33,48 @@ resource "tls_private_key" "ed25519-example" {
 }
 
 ----------------------------------------------------
+Data Source: aws_ebs_volume
+Use this data source to get information about an EBS
+volume for use in other resources.
+
+data "aws_ebs_volume" "ebs_volume" {
+  most_recent = true
+
+  filter {
+    name   = "volume-type"
+    values = ["gp2"]
+  }
+
+  filter {
+    name   = "tag:Name"
+    values = ["Example"]
+  }
+}
+------------------------------------------------------
+
+Data Source: aws_s3_bucket
+Provides details about a specific S3 bucket.
+
+This resource may prove useful when setting up a Route53 
+record, or an origin for a CloudFront Distribution.
+
+data "aws_s3_bucket" "selected" {
+  bucket = "bucket.test.com"
+}
+
+data "aws_route53_zone" "test_zone" {
+  name = "test.com."
+}
+
+resource "aws_route53_record" "example" {
+  zone_id = data.aws_route53_zone.test_zone.id
+  name    = "bucket"
+  type    = "A"
+
+  alias {
+    name    = data.aws_s3_bucket.selected.website_domain
+    zone_id = data.aws_s3_bucket.selected.hosted_zone_id
+  }
+}
+
+----------------------------------------------------------
